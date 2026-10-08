@@ -63,13 +63,13 @@
     cursor: pointer;
   }
 
-  /* ⭐ 左下のフォースカード（透明度0.6） */
+  /* ⭐ 左下のフォースカード（透明度0.5） */
   #forceHint {
     position: absolute;
     bottom: 10px;
     left: 10px;
     font-size: 16px;
-    color: rgba(0,0,0,0.6);
+    color: rgba(0,0,0,0.5);
   }
 
   /* 年ビュー */
@@ -178,8 +178,9 @@
     <button class="passcode-btn" onclick="pressNum(8)">8</button>
     <button class="passcode-btn" onclick="pressNum(9)">9</button><br>
 
-    <!-- ⭐ 4段目（0 は 8 の真下、⌫ は 9 の真下） -->
+    <!-- ⭐ 4段目（￥・0・⌫ の鉄壁レイアウト） -->
     <div style="display:flex; justify-content:center; gap:40px; margin-top:12px;">
+      <button class="passcode-btn" onclick="pressYen()">￥</button>
       <button class="passcode-btn" onclick="pressNum(0)">0</button>
       <button class="passcode-btn" onclick="deleteNum()">⌫</button>
     </div>
@@ -237,6 +238,11 @@
     "06": "6", "07": "7", "08": "8", "09": "9", "10": "10",
     "11": "J", "12": "Q", "13": "K"
   };
+
+  /* ⭐ ￥ボタンは内部的に 0 として扱う */
+  function pressYen() {
+    pressNum(0);
+  }
 
   /* ⭐ 数字入力処理（4桁目でフォースカード表示） */
   function pressNum(n) {
