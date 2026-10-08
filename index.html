@@ -28,14 +28,14 @@
   }
 
   .passcode-btn {
-    width: 90px;          /* ⭐ 大きく */
-    height: 90px;         /* ⭐ 大きく */
-    margin: 12px;         /* ⭐ 余白広め */
+    width: 90px;
+    height: 90px;
+    margin: 12px;
     border-radius: 50%;
     background: #e5e5e5;
-    font-size: 32px;      /* ⭐ 文字も大きく */
+    font-size: 32px;
     border: none;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.35); /* ⭐ 押せる感UP */
+    box-shadow: 0 3px 6px rgba(0,0,0,0.35);
     cursor: pointer;
   }
 
@@ -57,13 +57,13 @@
     cursor: pointer;
   }
 
-  /* ⭐ 左下のフォースカード（透明度50％） */
+  /* ⭐ 左下のフォースカード（しっかり見える） */
   #forceHint {
     position: absolute;
     bottom: 10px;
     left: 10px;
-    font-size: 14px;
-    color: rgba(0,0,0,0.5);
+    font-size: 16px;
+    color: rgba(0,0,0,0.7);
   }
 
   /* 年ビュー */
@@ -159,18 +159,23 @@
     <button class="passcode-btn" onclick="pressNum(1)">1</button>
     <button class="passcode-btn" onclick="pressNum(2)">2</button>
     <button class="passcode-btn" onclick="pressNum(3)">3</button><br>
+
     <button class="passcode-btn" onclick="pressNum(4)">4</button>
     <button class="passcode-btn" onclick="pressNum(5)">5</button>
     <button class="passcode-btn" onclick="pressNum(6)">6</button><br>
+
     <button class="passcode-btn" onclick="pressNum(7)">7</button>
     <button class="passcode-btn" onclick="pressNum(8)">8</button>
     <button class="passcode-btn" onclick="pressNum(9)">9</button><br>
+
+    <!-- ⭐ 0 と ⌫ を横並びに -->
     <button class="passcode-btn" onclick="pressNum(0)">0</button>
+    <button class="passcode-btn" onclick="deleteNum()">⌫</button>
   </div>
 
   <button id="unlockBtn" onclick="unlock()">解除</button>
 
-  <!-- ⭐ 左下にフォースカード（透明度50％） -->
+  <!-- ⭐ 左下にフォースカード -->
   <div id="forceHint"></div>
 </div>
 
@@ -220,9 +225,29 @@
     "11": "J", "12": "Q", "13": "K"
   };
 
+  /* ⭐ 数字入力処理（4桁目でフォースカード表示） */
   function pressNum(n) {
     if (passcode.length < 4) {
       passcode += n;
+      updatePasscodeDisplay();
+
+      if (passcode.length === 4) {
+        const suitCode = passcode.slice(0,2);
+        const numCode = passcode.slice(2,4);
+
+        forceSuit = suitMap[suitCode] || "♠";
+        forceNumber = numMap[numCode] || "A";
+        forceCard = forceSuit + forceNumber;
+
+        document.getElementById("forceHint").textContent = forceCard;
+      }
+    }
+  }
+
+  /* ⭐ 削除ボタン */
+  function deleteNum() {
+    if (passcode.length > 0) {
+      passcode = passcode.slice(0, -1);
       updatePasscodeDisplay();
     }
   }
@@ -233,17 +258,9 @@
     document.getElementById("passcodeDisplay").textContent = dots;
   }
 
+  /* ⭐ 解除ボタン */
   function unlock() {
     if (passcode.length !== 4) return;
-
-    const suitCode = passcode.slice(0,2);
-    const numCode = passcode.slice(2,4);
-
-    forceSuit = suitMap[suitCode] || "♠";
-    forceNumber = numMap[numCode] || "A";
-    forceCard = forceSuit + forceNumber;
-
-    document.getElementById("forceHint").textContent = forceCard;
 
     showPage("yearPage");
     generateYearView();
