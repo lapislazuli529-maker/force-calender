@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Force Calendar</title>
 
+<!-- ⭐ ホーム画面アイコン対応 -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+
 <style>
   body {
     margin: 0;
@@ -149,7 +155,7 @@
 
 <body>
 
-<!-- ⭐ 1：パスコード入力（フォースカード選択画面） -->
+<!-- ⭐ 1：パスコード入力画面 -->
 <div id="forcePage" class="page" style="display:block;">
   <h1 style="text-align:center;">パスコード入力</h1>
 
@@ -172,8 +178,8 @@
     <button class="passcode-btn" onclick="pressNum(8)">8</button>
     <button class="passcode-btn" onclick="pressNum(9)">9</button><br>
 
-    <!-- ⭐ 4段目（0 は 8 の真下、削除は 9 の真下） -->
-    <div style="display:flex; justify-content:center; gap:40px;">
+    <!-- ⭐ 4段目（0 は 8 の真下、⌫ は 9 の真下） -->
+    <div style="display:flex; justify-content:center; gap:40px; margin-top:12px;">
       <button class="passcode-btn" onclick="pressNum(0)">0</button>
       <button class="passcode-btn" onclick="deleteNum()">⌫</button>
     </div>
