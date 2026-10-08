@@ -16,38 +16,43 @@
   .page {
     display: none;
     padding: 20px;
+    position: relative;
   }
 
-  /* iOS純正ピッカー風 */
-  .picker {
-    width: 120px;
-    height: 150px;
-    overflow-y: scroll;
-    margin: auto;
-    background: #fff;
-    color: #000;
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    font-size: 24px;
+  /* ⭐ ロック画面風パスコード入力 */
+  #passcodeDisplay {
+    font-size: 40px;
+    letter-spacing: 10px;
     text-align: center;
-  }
-  .picker div {
-    padding: 12px 0;
+    margin: 30px 0;
   }
 
-  /* iOS風ボタン */
-  button {
-    padding: 12px 20px;
-    font-size: 20px;
-    border-radius: 12px;
+  .passcode-btn {
+    width: 70px;
+    height: 70px;
+    margin: 10px;
+    border-radius: 50%;
+    background: #e5e5e5;
+    font-size: 28px;
     border: none;
-    background: #ffffff;
-    color: #333;
-    margin: 8px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    cursor: pointer;
   }
 
-  /* ⭐ 年ビュー（縦に12ヶ月） */
+  .passcode-btn:active {
+    background: #ccc;
+  }
+
+  /* ⭐ 左下のフォースカード（透明度50％） */
+  #forceHint {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    font-size: 14px;
+    color: rgba(0,0,0,0.5); /* 透明度50％ */
+  }
+
+  /* 年ビュー */
   .year-view {
     background: #fff;
     padding: 10px 20px;
@@ -93,7 +98,7 @@
     font-weight: 600;
   }
 
-  /* ⭐ 月ビュー（純正） */
+  /* 月ビュー */
   .calendar-table {
     width: 100%;
     border-collapse: collapse;
@@ -120,7 +125,6 @@
     padding: 0;
   }
 
-  /* ⭐ 選択中は薄いグレー */
   .selected-day {
     background: #e5e5e5;
     color: #000 !important;
@@ -131,29 +135,33 @@
 
 <body>
 
-<!-- 1：フォースカード選択 -->
+<!-- ⭐ 1：パスコード入力（フォースカード選択画面） -->
 <div id="forcePage" class="page" style="display:block;">
-  <h1>フォースカード選択</h1>
+  <h1 style="text-align:center;">パスコード入力</h1>
 
-  <div id="selectedCardDisplay"
-       style="background:#fff;color:#000;font-size:40px;
-              width:200px;margin:20px auto;padding:20px;
-              border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.3);">
-    ♣A
+  <div id="passcodeDisplay">----</div>
+
+  <div style="text-align:center;">
+    <button class="passcode-btn" onclick="pressNum(1)">1</button>
+    <button class="passcode-btn" onclick="pressNum(2)">2</button>
+    <button class="passcode-btn" onclick="pressNum(3)">3</button><br>
+    <button class="passcode-btn" onclick="pressNum(4)">4</button>
+    <button class="passcode-btn" onclick="pressNum(5)">5</button>
+    <button class="passcode-btn" onclick="pressNum(6)">6</button><br>
+    <button class="passcode-btn" onclick="pressNum(7)">7</button>
+    <button class="passcode-btn" onclick="pressNum(8)">8</button>
+    <button class="passcode-btn" onclick="pressNum(9)">9</button><br>
+    <button class="passcode-btn" onclick="pressNum(0)">0</button>
   </div>
 
-  <h3>絵柄</h3>
-  <div class="picker" id="suitPicker">
-    <div data-suit="♣">♣</div>
-    <div data-suit="♥">♥</div>
-    <div data-suit="♠">♠</div>
-    <div data-suit="♦">♦</div>
-  </div>
+  <button onclick="unlock()" 
+          style="margin-top:20px;font-size:22px;padding:12px 20px;
+                 border-radius:12px;border:none;background:#007aff;color:#fff;">
+    解除
+  </button>
 
-  <h3>数字</h3>
-  <div class="picker" id="numberPicker"></div>
-
-  <button onclick="goToYearView()">演技へ進む</button>
+  <!-- ⭐ 左下にフォースカード（透明度50％） -->
+  <div id="forceHint"></div>
 </div>
 
 
@@ -164,10 +172,9 @@
 </div>
 
 
-<!-- 3：月ビュー -->
+<!-- ⭐ 3：月ビュー -->
 <div id="calendarPage" class="page">
 
-  <!-- ⭐ 年ビューへ戻る -->
   <div onclick="showPage('yearPage')" 
        style="font-size:20px;color:#007aff;cursor:pointer;margin-bottom:10px;">
     ＜ 年へ戻る
@@ -176,62 +183,67 @@
   <h2 id="calendarTitle" style="font-weight:500;margin-bottom:10px;"></h2>
   <div id="calendarArea"></div>
 
-  <!-- ⭐ カードの予定一覧（常に1件だけ表示） -->
   <div id="eventList" style="margin-top:20px;text-align:left;font-size:18px;"></div>
 </div>
 
 
 <script>
-  let forceSuit = "♣";
-  let forceNumber = "A";
-  let selectedMonth = null;
+  let forceSuit = "";
+  let forceNumber = "";
+  let forceCard = "";
+  let passcode = "";
 
-  let tapCount = 0;  
-  let savedCards = {};  // ⭐ 日付ごとのカード保存
+  let selectedMonth = null;
+  let tapCount = 0;
+  let savedCards = {};
+
+  const suitMap = {
+    "01": "♦",
+    "02": "♣",
+    "03": "♥",
+    "04": "♠"
+  };
+
+  const numMap = {
+    "01": "A", "02": "2", "03": "3", "04": "4", "05": "5",
+    "06": "6", "07": "7", "08": "8", "09": "9", "10": "10",
+    "11": "J", "12": "Q", "13": "K"
+  };
+
+  function pressNum(n) {
+    if (passcode.length < 4) {
+      passcode += n;
+      updatePasscodeDisplay();
+    }
+  }
+
+  function updatePasscodeDisplay() {
+    let dots = passcode.split("").map(() => "●").join("");
+    while (dots.length < 4) dots += "・";
+    document.getElementById("passcodeDisplay").textContent = dots;
+  }
+
+  function unlock() {
+    if (passcode.length !== 4) return;
+
+    const suitCode = passcode.slice(0,2);
+    const numCode = passcode.slice(2,4);
+
+    forceSuit = suitMap[suitCode] || "♠";
+    forceNumber = numMap[numCode] || "A";
+    forceCard = forceSuit + forceNumber;
+
+    document.getElementById("forceHint").textContent = forceCard;
+
+    showPage("yearPage");
+    generateYearView();
+  }
 
   function showPage(id) {
     document.querySelectorAll(".page").forEach(p => p.style.display = "none");
     document.getElementById(id).style.display = "block";
   }
 
-  function updateSelectedCard() {
-    document.getElementById("selectedCardDisplay").textContent =
-      forceSuit + forceNumber;
-  }
-
-  /* 絵柄ピッカー */
-  document.getElementById("suitPicker").addEventListener("click", e => {
-    if (e.target.dataset.suit) {
-      forceSuit = e.target.dataset.suit;
-      updateSelectedCard();
-    }
-  });
-
-  /* 数字ピッカー */
-  const numbers = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
-  const numberPicker = document.getElementById("numberPicker");
-
-  numbers.forEach(num => {
-    const div = document.createElement("div");
-    div.textContent = num;
-    div.dataset.number = num;
-    numberPicker.appendChild(div);
-  });
-
-  numberPicker.addEventListener("click", e => {
-    if (e.target.dataset.number) {
-      forceNumber = e.target.dataset.number;
-      updateSelectedCard();
-    }
-  });
-
-  /* 年ビューへ */
-  function goToYearView() {
-    generateYearView();
-    showPage("yearPage");
-  }
-
-  /* ⭐ 年ビュー生成 */
   function generateYearView() {
     const year = new Date().getFullYear();
     document.getElementById("currentYear").textContent = year + "年";
@@ -239,13 +251,16 @@
     const container = document.getElementById("yearContainer");
     container.innerHTML = "";
 
+    const months = ["January","February","March","April","May","June",
+                    "July","August","September","October","November","December"];
+
     for (let m = 1; m <= 12; m++) {
       const block = document.createElement("div");
       block.className = "month-block";
       block.onclick = () => openMonth(m);
 
       block.innerHTML = `
-        <div class="month-title">${m}月</div>
+        <div class="month-title">${m}月 ${months[m-1]}</div>
         ${generateMiniMonth(year, m)}
       `;
 
@@ -253,7 +268,6 @@
     }
   }
 
-  /* ⭐ 年ビュー用ミニカレンダー */
   function generateMiniMonth(year, month) {
     const firstDay = new Date(year, month - 1, 1).getDay();
     const lastDate = new Date(year, month, 0).getDate();
@@ -279,29 +293,35 @@
     return html;
   }
 
-  /* 月ビューへ移動 */
   function openMonth(month) {
     selectedMonth = month;
     tapCount = 0;
-    savedCards = {};  // ⭐ 月を変えたらリセット
+    savedCards = {};
     generateCalendar();
     showPage("calendarPage");
   }
 
-  /* ランダムカード */
   function randomCard() {
     const suits = ["♣","♥","♠","♦"];
     const nums = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
-    return suits[Math.floor(Math.random()*4)] + nums[Math.floor(Math.random()*13)];
+
+    let card = "";
+    do {
+      card = suits[Math.floor(Math.random()*4)] + nums[Math.floor(Math.random()*13)];
+    } while (card === forceCard);
+
+    return card;
   }
 
-  /* ⭐ 月ビュー生成（初期位置のカード表示なし） */
   function generateCalendar() {
     const year = new Date().getFullYear();
     const month = selectedMonth;
 
+    const months = ["January","February","March","April","May","June",
+                    "July","August","September","October","November","December"];
+
     document.getElementById("calendarTitle").textContent =
-      `${year}年 ${month}月`;
+      `${year}年 ${month}月 ${months[month-1]}`;
 
     const firstDay = new Date(year, month - 1, 1).getDay();
     const lastDate = new Date(year, month, 0).getDate();
@@ -322,9 +342,7 @@
     document.getElementById("eventList").innerHTML = "";
   }
 
-  /* ⭐ 日付タップ時のカード表示（同じ日なら同じカード） */
   function tapDay(cell, day) {
-
     document.getElementById("eventList").innerHTML = "";
 
     document.querySelectorAll(".calendar-cell").forEach(c => {
@@ -336,24 +354,23 @@
     let card;
 
     if (savedCards[day]) {
-      card = savedCards[day];  // ⭐ 同じ日なら同じカード
+      card = savedCards[day];
     } else {
       if (tapCount === 0) {
-        card = forceSuit + forceNumber;  // ⭐ 最初のタップだけフォース
+        card = forceCard;
       } else {
         card = randomCard();
       }
-      savedCards[day] = card;  // ⭐ 保存
+      savedCards[day] = card;
     }
 
     tapCount++;
 
-    cell.innerHTML = `${day}`;  // ⭐ ドットなし
+    cell.innerHTML = `${day}`;
 
     addEventToList(day, card);
   }
 
-  /* ⭐ カレンダー下の予定一覧（常に1件だけ） */
   function addEventToList(day, card) {
     const list = document.getElementById("eventList");
 
@@ -362,7 +379,7 @@
 
     const html = `
       <div style="margin-bottom:10px;">
-        <span style="font-size:22px;">📅 ${suitIcon}${number}</span><br>
+        <span style="font-size:22px;">🕒 ${suitIcon}${number}</span><br>
         <span style="color:#666;">終日</span>
       </div>
     `;
