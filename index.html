@@ -54,12 +54,15 @@
   }
 
   .month-block {
-    margin-bottom: 26px; /* 純正より少し広め */
     cursor: pointer;
+    user-select: none;
+    padding: 10px 0;
+    display: block;
+    margin-bottom: 26px;
   }
 
   .month-title {
-    font-size: 20px; /* 純正より少し大きめ */
+    font-size: 20px;
     font-weight: 500;
     text-align: left;
     margin-bottom: 6px;
@@ -79,8 +82,8 @@
   }
 
   .mini-month-table td {
-    font-size: 14px; /* 純正より少し大きめ */
-    height: 22px;    /* 純正より少し大きめ */
+    font-size: 14px;
+    height: 22px;
     text-align: center;
     color: #000;
   }
@@ -134,6 +137,7 @@
 </head>
 
 <body>
+
 <!-- 1：フォースカード選択 -->
 <div id="forcePage" class="page" style="display:block;">
   <h1>フォースカード選択</h1>
@@ -163,9 +167,17 @@
 <!-- ⭐ 2：純正 iPhone 年ビュー（縦に12ヶ月）＋少し大きめ -->
 <div id="yearPage" class="page year-view">
   <h2 id="currentYear" style="text-align:left;font-size:26px;margin-bottom:20px;"></h2>
-
   <div id="yearContainer"></div>
 </div>
+
+
+<!-- 3：月ビュー -->
+<div id="calendarPage" class="page">
+  <h2 id="calendarTitle" style="font-weight:500;margin-bottom:10px;"></h2>
+  <div id="calendarArea"></div>
+</div>
+
+
 <script>
   let forceSuit = "♣";
   let forceNumber = "A";
@@ -214,7 +226,7 @@
     showPage("yearPage");
   }
 
-  /* ⭐ 純正 iPhone 年ビュー（縦に12ヶ月）＋少し大きめ */
+  /* ⭐ 年ビュー生成（縦に12ヶ月） */
   function generateYearView() {
     const year = new Date().getFullYear();
     document.getElementById("currentYear").textContent = year + "年";
@@ -236,7 +248,7 @@
     }
   }
 
-  /* ⭐ 年ビュー用ミニカレンダー生成（純正風＋少し大きめ） */
+  /* ⭐ 年ビュー用ミニカレンダー */
   function generateMiniMonth(year, month) {
     const firstDay = new Date(year, month - 1, 1).getDay();
     const lastDate = new Date(year, month, 0).getDate();
@@ -277,7 +289,7 @@
     return suits[Math.floor(Math.random()*4)] + nums[Math.floor(Math.random()*13)];
   }
 
-  /* ⭐ 月ビュー（純正 iPhone 完全再現） */
+  /* ⭐ 月ビュー生成（純正 iPhone 完全再現） */
   function generateCalendar() {
     const year = new Date().getFullYear();
     const month = selectedMonth;
@@ -307,7 +319,7 @@
     firstCell.innerHTML += `<span class="card-value">${forceSuit + forceNumber}</span>`;
   }
 
-  /* ⭐ 日付タップ時のカード表示（純正の黒丸＋右下イベント） */
+  /* ⭐ 日付タップ時のカード表示 */
   function tapDay(cell, day) {
     tapCount++;
 
