@@ -126,22 +126,6 @@
     color: #000 !important;
     border-radius: 50%;
   }
-
-  /* ⭐ ドット（予定表示） */
-  .card-dot {
-    position: absolute;
-    bottom: 4px;
-    right: 6px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-  }
-
-  .dot-club { background: #000; }
-  .dot-spade { background: #000; }
-  .dot-heart { background: #e74c3c; }
-  .dot-diamond { background: #e67e22; }
-
 </style>
 </head>
 
@@ -195,7 +179,8 @@
   let forceNumber = "A";
   let selectedMonth = null;
 
-  let tapCount = 0;  // ⭐ 最初のタップだけフォースカード
+  let tapCount = 0;  
+  let savedCards = {};  // ⭐ 日付ごとのカード保存
 
   function showPage(id) {
     document.querySelectorAll(".page").forEach(p => p.style.display = "none");
@@ -290,7 +275,8 @@
   /* 月ビューへ移動 */
   function openMonth(month) {
     selectedMonth = month;
-    tapCount = 0;  // ⭐ 初期化（最初のタップだけフォースカード）
+    tapCount = 0;
+    savedCards = {};  // ⭐ 月を変えたらリセット
     generateCalendar();
     showPage("calendarPage");
   }
@@ -326,14 +312,12 @@
     html += "</tr></table>";
     document.getElementById("calendarArea").innerHTML = html;
 
-    // ⭐ 初期位置のカード表示なし
     document.getElementById("eventList").innerHTML = "";
   }
 
-  /* ⭐ 日付タップ時のカード表示（フォースカードは最初だけ） */
+  /* ⭐ 日付タップ時のカード表示（同じ日なら同じカード） */
   function tapDay(cell, day) {
 
-    // ⭐ 予定一覧をリセット（常に1件だけ表示）
     document.getElementById("eventList").innerHTML = "";
 
     document.querySelectorAll(".calendar-cell").forEach(c => {
@@ -344,23 +328,22 @@
 
     let card;
 
-    if (tapCount === 0) {
-      // ⭐ 最初のタップ → フォースカード
-      card = forceSuit + forceNumber;
+    if (savedCards[day]) {
+      // ⭐ すでにその日にカードがある → それを再表示
+      card = savedCards[day];
     } else {
-      // ⭐ 2回目以降 → ランダムカード
-      card = randomCard();
+      // ⭐ 初めて触る日
+      if (tapCount === 0) {
+        card = forceSuit + forceNumber;  // 最初のタップだけフォース
+      } else {
+        card = randomCard();
+      }
+      savedCards[day] = card;  // ⭐ 保存
     }
 
     tapCount++;
 
-    let dotClass = "";
-    if (card.includes("♣")) dotClass = "dot-club";
-    if (card.includes("♠")) dotClass = "dot-spade";
-    if (card.includes("♥")) dotClass = "dot-heart";
-    if (card.includes("♦")) dotClass = "dot-diamond";
-
-    cell.innerHTML = `${day}<span class="card-dot ${dotClass}"></span>`;
+    cell.innerHTML = `${day}`;  // ⭐ ドット消したので数字だけ
 
     addEventToList(day, card);
   }
@@ -379,7 +362,7 @@
       </div>
     `;
 
-    list.innerHTML = html;  // ⭐ 上書き（残らない）
+    list.innerHTML = html;
   }
 </script>
 
