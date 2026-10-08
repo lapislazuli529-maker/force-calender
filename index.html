@@ -172,9 +172,11 @@
     <button class="passcode-btn" onclick="pressNum(8)">8</button>
     <button class="passcode-btn" onclick="pressNum(9)">9</button><br>
 
-    <!-- ⭐ 4段目（0は8の下、削除は9の下） -->
-    <button class="passcode-btn" style="margin-right:120px;" onclick="pressNum(0)">0</button>
-    <button class="passcode-btn" onclick="deleteNum()">⌫</button>
+    <!-- ⭐ 4段目（0 は 8 の真下、削除は 9 の真下） -->
+    <div style="display:flex; justify-content:center; gap:40px;">
+      <button class="passcode-btn" onclick="pressNum(0)">0</button>
+      <button class="passcode-btn" onclick="deleteNum()">⌫</button>
+    </div>
 
   </div>
 
