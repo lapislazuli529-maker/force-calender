@@ -166,6 +166,13 @@
 
 <!-- 3：月ビュー -->
 <div id="calendarPage" class="page">
+
+  <!-- ⭐ 年ビューへ戻る -->
+  <div onclick="showPage('yearPage')" 
+       style="font-size:20px;color:#007aff;cursor:pointer;margin-bottom:10px;">
+    ＜ 年へ戻る
+  </div>
+
   <h2 id="calendarTitle" style="font-weight:500;margin-bottom:10px;"></h2>
   <div id="calendarArea"></div>
 
@@ -329,12 +336,10 @@
     let card;
 
     if (savedCards[day]) {
-      // ⭐ すでにその日にカードがある → それを再表示
-      card = savedCards[day];
+      card = savedCards[day];  // ⭐ 同じ日なら同じカード
     } else {
-      // ⭐ 初めて触る日
       if (tapCount === 0) {
-        card = forceSuit + forceNumber;  // 最初のタップだけフォース
+        card = forceSuit + forceNumber;  // ⭐ 最初のタップだけフォース
       } else {
         card = randomCard();
       }
@@ -343,7 +348,7 @@
 
     tapCount++;
 
-    cell.innerHTML = `${day}`;  // ⭐ ドット消したので数字だけ
+    cell.innerHTML = `${day}`;  // ⭐ ドットなし
 
     addEventToList(day, card);
   }
