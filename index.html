@@ -57,13 +57,13 @@
     cursor: pointer;
   }
 
-  /* ⭐ 左下のフォースカード（しっかり見える） */
+  /* ⭐ 左下のフォースカード（透明度0.6） */
   #forceHint {
     position: absolute;
     bottom: 10px;
     left: 10px;
     font-size: 16px;
-    color: rgba(0,0,0,0.7);
+    color: rgba(0,0,0,0.6);
   }
 
   /* 年ビュー */
@@ -156,21 +156,26 @@
   <div id="passcodeDisplay">・・・・</div>
 
   <div style="text-align:center;">
+
+    <!-- 1段目 -->
     <button class="passcode-btn" onclick="pressNum(1)">1</button>
     <button class="passcode-btn" onclick="pressNum(2)">2</button>
     <button class="passcode-btn" onclick="pressNum(3)">3</button><br>
 
+    <!-- 2段目 -->
     <button class="passcode-btn" onclick="pressNum(4)">4</button>
     <button class="passcode-btn" onclick="pressNum(5)">5</button>
     <button class="passcode-btn" onclick="pressNum(6)">6</button><br>
 
+    <!-- 3段目 -->
     <button class="passcode-btn" onclick="pressNum(7)">7</button>
     <button class="passcode-btn" onclick="pressNum(8)">8</button>
     <button class="passcode-btn" onclick="pressNum(9)">9</button><br>
 
-    <!-- ⭐ 0 と ⌫ を横並びに -->
-    <button class="passcode-btn" onclick="pressNum(0)">0</button>
+    <!-- ⭐ 4段目（0は8の下、削除は9の下） -->
+    <button class="passcode-btn" style="margin-right:120px;" onclick="pressNum(0)">0</button>
     <button class="passcode-btn" onclick="deleteNum()">⌫</button>
+
   </div>
 
   <button id="unlockBtn" onclick="unlock()">解除</button>
