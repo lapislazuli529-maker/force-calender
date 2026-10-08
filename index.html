@@ -20,6 +20,18 @@
     padding: 20px;
   }
 
+  /* 水色＋星背景（共通化） */
+  .star-bg {
+    background: #aee6ff;
+    background-image: radial-gradient(#ffffff 2px, transparent 2px),
+                      radial-gradient(#ffffff 2px, transparent 2px);
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
+    min-height: 100vh;
+    color: #333;
+  }
+
+  /* iOS風ボタン */
   button {
     padding: 12px 20px;
     font-size: 20px;
@@ -31,60 +43,50 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
   }
 
-  /* 最終ページ背景（水色＋星） */
-  #calendarPage {
-    background: #aee6ff;
-    background-image: radial-gradient(#ffffff 2px, transparent 2px),
-                      radial-gradient(#ffffff 2px, transparent 2px);
-    background-size: 40px 40px;
-    background-position: 0 0, 20px 20px;
-    min-height: 100vh;
-    color: #333;
-  }
-
-  /* 月選択ボタン（iOS風） */
-  .month-buttons button {
-    width: 90px;
-    padding: 12px;
-    margin: 8px;
-    border-radius: 12px;
+  /* ドラム式ピッカー */
+  .picker {
+    width: 120px;
+    height: 150px;
+    overflow-y: scroll;
+    margin: auto;
     background: #fff;
     color: #333;
-    font-size: 18px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    font-size: 24px;
+  }
+
+  .picker div {
+    padding: 12px 0;
   }
 
   /* カード表示 */
   .card {
-    font-size: 20px;
+    font-size: 18px;
     padding: 6px;
     border-radius: 6px;
-  }
-
-  .force {
-    background: #ffeb3b;
-    color: #000;
-    font-weight: bold;
   }
 </style>
 </head>
 
 <body>
 
-<!-- 1：フォースカード選択 -->
+<!-- 1：フォースカード選択（ドラム式） -->
 <div id="forcePage" class="page" style="display:block;">
-  <h1>フォースカードを選択</h1>
+  <h1>フォースカード選択</h1>
 
   <h3>絵柄</h3>
-  <div id="suitButtons">
-    <button data-suit="♣">♣</button>
-    <button data-suit="♥">♥</button>
-    <button data-suit="♠">♠</button>
-    <button data-suit="♦">♦</button>
+  <div class="picker" id="suitPicker">
+    <div data-suit="♣">♣</div>
+    <div data-suit="♥">♥</div>
+    <div data-suit="♠">♠</div>
+    <div data-suit="♦">♦</div>
   </div>
 
   <h3>数字</h3>
-  <div id="numberButtons"></div>
+  <div class="picker" id="numberPicker"></div>
+
+  <button onclick="goToDayPage()">演技へ進む</button>
 </div>
 
 <!-- 2：誕生日（日）選択 -->
@@ -93,8 +95,8 @@
   <div id="dayButtons"></div>
 </div>
 
-<!-- 3：月選択 -->
-<div id="monthPage" class="page">
+<!-- 3：月選択（水色＋星背景） -->
+<div id="monthPage" class="page star-bg">
   <h2 id="currentYear"></h2>
   <div class="month-buttons">
     <button data-month="1">1月</button>
@@ -112,15 +114,15 @@
   </div>
 </div>
 
-<!-- 4：カレンダー表示 -->
-<div id="calendarPage" class="page">
+<!-- 4：カレンダー表示（水色＋星背景） -->
+<div id="calendarPage" class="page star-bg">
   <h2 id="calendarTitle"></h2>
   <div id="calendarArea"></div>
 </div>
 
 <script>
-  let forceSuit = null;
-  let forceNumber = null;
+  let forceSuit = "♣";
+  let forceNumber = "A";
   let selectedDay = null;
   let selectedMonth = null;
 
@@ -129,27 +131,30 @@
     document.getElementById(id).style.display = "block";
   }
 
-  /* 1：フォースカード選択 */
-  document.querySelectorAll("#suitButtons button").forEach(btn => {
-    btn.onclick = () => {
-      forceSuit = btn.dataset.suit;
-    };
-  });
-
+  /* ドラム式ピッカー：数字 */
   const numbers = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
-  const numberButtons = document.getElementById("numberButtons");
-
+  const numberPicker = document.getElementById("numberPicker");
   numbers.forEach(num => {
-    const btn = document.createElement("button");
-    btn.textContent = num;
-    btn.onclick = () => {
-      forceNumber = num;
-      showPage("dayPage");
-    };
-    numberButtons.appendChild(btn);
+    const div = document.createElement("div");
+    div.textContent = num;
+    div.dataset.number = num;
+    numberPicker.appendChild(div);
   });
 
-  /* 2：日選択 */
+  /* ピッカー選択 */
+  document.getElementById("suitPicker").addEventListener("click", e => {
+    if (e.target.dataset.suit) forceSuit = e.target.dataset.suit;
+  });
+
+  numberPicker.addEventListener("click", e => {
+    if (e.target.dataset.number) forceNumber = e.target.dataset.number;
+  });
+
+  function goToDayPage() {
+    showPage("dayPage");
+  }
+
+  /* 日選択 */
   const dayButtons = document.getElementById("dayButtons");
   for (let i = 1; i <= 31; i++) {
     const btn = document.createElement("button");
@@ -161,7 +166,7 @@
     dayButtons.appendChild(btn);
   }
 
-  /* 3：月選択 */
+  /* 月選択 */
   document.getElementById("currentYear").textContent =
     new Date().getFullYear() + "年";
 
@@ -173,16 +178,14 @@
     };
   });
 
-  /* ランダムカード生成 */
+  /* ランダムカード */
   function randomCard() {
     const suits = ["♣","♥","♠","♦"];
     const nums = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
-    const s = suits[Math.floor(Math.random() * suits.length)];
-    const n = nums[Math.floor(Math.random() * nums.length)];
-    return s + n;
+    return suits[Math.floor(Math.random()*4)] + nums[Math.floor(Math.random()*13)];
   }
 
-  /* 4：カレンダー生成 */
+  /* カレンダー生成 */
   function generateCalendar() {
     const year = new Date().getFullYear();
     const month = selectedMonth;
@@ -200,14 +203,12 @@
 
     for (let d = 1; d <= lastDate; d++) {
       let card = randomCard();
-      let style = "class='card'";
 
       if (d === selectedDay) {
-        card = forceSuit + forceNumber;
-        style = "class='card force'";
+        card = forceSuit + forceNumber;  // ★フォースカード
       }
 
-      html += `<td ${style}>${d}<br>${card}</td>`;
+      html += `<td class="card">${d}<br>${card}</td>`;
 
       if ((d + firstDay) % 7 === 0) html += "</tr><tr>";
     }
