@@ -15,26 +15,24 @@
     text-align: center;
   }
 
-  /* 共通ボタン */
-  button {
-    padding: 14px 22px;
-    font-size: 20px;
-    border-radius: 12px;
-    border: none;
-    background: #ffffff;
-    color: #333;
-    margin: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-  }
-
-  /* ページ非表示制御 */
   .page {
     display: none;
     padding: 20px;
   }
 
-  /* 最終ページの背景（水色＋星パターン） */
-  #finalPage {
+  button {
+    padding: 12px 20px;
+    font-size: 20px;
+    border-radius: 12px;
+    border: none;
+    background: #ffffff;
+    color: #333;
+    margin: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  /* 最終ページ背景（水色＋星） */
+  #calendarPage {
     background: #aee6ff;
     background-image: radial-gradient(#ffffff 2px, transparent 2px),
                       radial-gradient(#ffffff 2px, transparent 2px);
@@ -44,50 +42,60 @@
     color: #333;
   }
 
-  /* iOS風 月選択ボタン */
+  /* 月選択ボタン（iOS風） */
   .month-buttons button {
     width: 90px;
     padding: 12px;
     margin: 8px;
     border-radius: 12px;
-    border: none;
-    background: #ffffff;
+    background: #fff;
     color: #333;
     font-size: 18px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    transition: transform 0.1s ease;
   }
 
-  .month-buttons button:active {
-    transform: scale(0.95);
+  /* カード表示 */
+  .card {
+    font-size: 20px;
+    padding: 6px;
+    border-radius: 6px;
   }
 
-  /* カレンダー表示 */
-  #calendarArea {
-    margin-top: 20px;
-    font-size: 22px;
+  .force {
+    background: #ffeb3b;
+    color: #000;
+    font-weight: bold;
   }
 </style>
 </head>
 
 <body>
 
-<!-- ページ1：スタート -->
-<div id="startPage" class="page" style="display:block;">
-  <h1>Force Calendar</h1>
-  <button onclick="goToDayPage()">演技へ進む</button>
+<!-- 1：フォースカード選択 -->
+<div id="forcePage" class="page" style="display:block;">
+  <h1>フォースカードを選択</h1>
+
+  <h3>絵柄</h3>
+  <div id="suitButtons">
+    <button data-suit="♣">♣</button>
+    <button data-suit="♥">♥</button>
+    <button data-suit="♠">♠</button>
+    <button data-suit="♦">♦</button>
+  </div>
+
+  <h3>数字</h3>
+  <div id="numberButtons"></div>
 </div>
 
-<!-- ページ2：日の選択 -->
+<!-- 2：誕生日（日）選択 -->
 <div id="dayPage" class="page">
   <h2>誕生日の日を選んでください</h2>
   <div id="dayButtons"></div>
 </div>
 
-<!-- ページ3：月選択＋カレンダー -->
-<div id="finalPage" class="page">
+<!-- 3：月選択 -->
+<div id="monthPage" class="page">
   <h2 id="currentYear"></h2>
-
   <div class="month-buttons">
     <button data-month="1">1月</button>
     <button data-month="2">2月</button>
@@ -102,68 +110,105 @@
     <button data-month="11">11月</button>
     <button data-month="12">12月</button>
   </div>
+</div>
 
+<!-- 4：カレンダー表示 -->
+<div id="calendarPage" class="page">
+  <h2 id="calendarTitle"></h2>
   <div id="calendarArea"></div>
 </div>
 
 <script>
+  let forceSuit = null;
+  let forceNumber = null;
   let selectedDay = null;
+  let selectedMonth = null;
 
-  /* ページ遷移 */
   function showPage(id) {
     document.querySelectorAll(".page").forEach(p => p.style.display = "none");
     document.getElementById(id).style.display = "block";
   }
 
-  function goToDayPage() {
-    showPage("dayPage");
-  }
+  /* 1：フォースカード選択 */
+  document.querySelectorAll("#suitButtons button").forEach(btn => {
+    btn.onclick = () => {
+      forceSuit = btn.dataset.suit;
+    };
+  });
 
-  function goToFinalPage() {
-    showPage("finalPage");
-  }
+  const numbers = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+  const numberButtons = document.getElementById("numberButtons");
 
-  /* 日ボタン生成 */
+  numbers.forEach(num => {
+    const btn = document.createElement("button");
+    btn.textContent = num;
+    btn.onclick = () => {
+      forceNumber = num;
+      showPage("dayPage");
+    };
+    numberButtons.appendChild(btn);
+  });
+
+  /* 2：日選択 */
   const dayButtons = document.getElementById("dayButtons");
   for (let i = 1; i <= 31; i++) {
     const btn = document.createElement("button");
     btn.textContent = i + "日";
     btn.onclick = () => {
       selectedDay = i;
-      goToFinalPage();
+      showPage("monthPage");
     };
     dayButtons.appendChild(btn);
   }
 
-  /* 現在の年を表示 */
+  /* 3：月選択 */
   document.getElementById("currentYear").textContent =
     new Date().getFullYear() + "年";
 
-  /* 月選択ボタン → カレンダー生成 */
   document.querySelectorAll(".month-buttons button").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const month = parseInt(btn.dataset.month);
-      generateCalendar(month);
-    });
+    btn.onclick = () => {
+      selectedMonth = parseInt(btn.dataset.month);
+      generateCalendar();
+      showPage("calendarPage");
+    };
   });
 
-  /* カレンダー生成（簡易版） */
-  function generateCalendar(month) {
+  /* ランダムカード生成 */
+  function randomCard() {
+    const suits = ["♣","♥","♠","♦"];
+    const nums = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+    const s = suits[Math.floor(Math.random() * suits.length)];
+    const n = nums[Math.floor(Math.random() * nums.length)];
+    return s + n;
+  }
+
+  /* 4：カレンダー生成 */
+  function generateCalendar() {
     const year = new Date().getFullYear();
+    const month = selectedMonth;
+
+    document.getElementById("calendarTitle").textContent =
+      `${year}年 ${month}月`;
+
     const firstDay = new Date(year, month - 1, 1).getDay();
     const lastDate = new Date(year, month, 0).getDate();
 
-    let html = `<h3>${year}年 ${month}月</h3><table style="margin:auto;font-size:20px;">`;
-    html += "<tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr><tr>";
+    let html = `<table style="margin:auto;font-size:20px;">
+      <tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr><tr>`;
 
     for (let i = 0; i < firstDay; i++) html += "<td></td>";
 
     for (let d = 1; d <= lastDate; d++) {
-      let style = "";
+      let card = randomCard();
+      let style = "class='card'";
+
       if (d === selectedDay) {
-        style = "background:#ffeb3b;color:#000;font-weight:bold;border-radius:8px;";
+        card = forceSuit + forceNumber;
+        style = "class='card force'";
       }
-      html += `<td style="${style}">${d}</td>`;
+
+      html += `<td ${style}>${d}<br>${card}</td>`;
+
       if ((d + firstDay) % 7 === 0) html += "</tr><tr>";
     }
 
