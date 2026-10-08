@@ -1,323 +1,175 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Force Calendar</title>
-
-<!-- ★ iPhoneアプリ化設定 -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<link rel="apple-touch-icon" href="icon.png">
 <link rel="manifest" href="manifest.json">
 
 <style>
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
     background: #000;
     color: #fff;
-    overflow: hidden;
-  }
-
-  /* 設定画面（中央配置＆大型化） */
-  #setup {
-    position: absolute;
-    width: 100vw;
-    height: 100vh;
-    background: #111;
-    padding: 20px;
-    z-index: 9999;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    font-size: 32px;
-  }
-
-  #setup select {
-    font-size: 32px;
-    padding: 10px 20px;
-    margin-top: 10px;
-  }
-
-  #setup button {
-    font-size: 36px;
-    padding: 14px 28px;
-    margin-top: 20px;
-  }
-
-  /* 観客ページ（スワイプ） */
-  .page {
-    width: 100vw;
-    height: 100vh;
-    position: absolute;
-    top: 0;
-    left: 0;
-
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: 180px;
-    gap: 40px;
-    padding: 40px 20px;
-    box-sizing: border-box;
-  }
-
-  /* アイコン（iPhoneアプリ風） */
-  .icon {
-    width: 150px;
-    height: 150px;
-    background: #1e1e1e;
-    border-radius: 28px;
-    margin: auto;
-
-    font-size: 60px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  /* カレンダー */
-  #calendarPage {
-    width: 100vw;
-    height: 100vh;
-    padding: 20px;
-    box-sizing: border-box;
-  }
-
-  #calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 14px;
-    padding: 10px;
-  }
-
-  .day {
-    background: #222;
-    border-radius: 14px;
-    padding: 28px 0;
-    font-size: 34px;
     text-align: center;
-    line-height: 1.3;
   }
 
-  .forced {
-    background: #ffcc00;
-    color: #000;
-    font-weight: bold;
-    font-size: 42px;
-    padding: 32px 0;
+  /* 共通ボタン */
+  button {
+    padding: 14px 22px;
+    font-size: 20px;
+    border-radius: 12px;
+    border: none;
+    background: #ffffff;
+    color: #333;
+    margin: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  /* ページ非表示制御 */
+  .page {
+    display: none;
+    padding: 20px;
+  }
+
+  /* 最終ページの背景（水色＋星パターン） */
+  #finalPage {
+    background: #aee6ff;
+    background-image: radial-gradient(#ffffff 2px, transparent 2px),
+                      radial-gradient(#ffffff 2px, transparent 2px);
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
+    min-height: 100vh;
+    color: #333;
+  }
+
+  /* iOS風 月選択ボタン */
+  .month-buttons button {
+    width: 90px;
+    padding: 12px;
+    margin: 8px;
+    border-radius: 12px;
+    border: none;
+    background: #ffffff;
+    color: #333;
+    font-size: 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: transform 0.1s ease;
+  }
+
+  .month-buttons button:active {
+    transform: scale(0.95);
+  }
+
+  /* カレンダー表示 */
+  #calendarArea {
+    margin-top: 20px;
+    font-size: 22px;
   }
 </style>
 </head>
+
 <body>
 
-<!-- 設定画面 -->
-<div id="setup">
-  <h2>フォースカード設定</h2>
-
-  <label>マーク：</label>
-  <select id="mark">
-    <option value="♠">♠</option>
-    <option value="♥">♥</option>
-    <option value="♦">♦</option>
-    <option value="♣">♣</option>
-  </select>
-
-  <label style="margin-top:20px;">数字：</label>
-  <select id="number">
-    <option>A</option><option>2</option><option>3</option><option>4</option>
-    <option>5</option><option>6</option><option>7</option><option>8</option>
-    <option>9</option><option>10</option><option>J</option><option>Q</option><option>K</option>
-  </select>
-
-  <button id="startBtn">演技に進む</button>
+<!-- ページ1：スタート -->
+<div id="startPage" class="page" style="display:block;">
+  <h1>Force Calendar</h1>
+  <button onclick="goToDayPage()">演技へ進む</button>
 </div>
 
-<!-- 観客ページ1：月 -->
-<div id="page1" class="page" style="left:0vw;">
-  <div class="icon" data-month="1">1</div>
-  <div class="icon" data-month="2">2</div>
-  <div class="icon" data-month="3">3</div>
-  <div class="icon" data-month="4">4</div>
-  <div class="icon" data-month="5">5</div>
-  <div class="icon" data-month="6">6</div>
-  <div class="icon" data-month="7">7</div>
-  <div class="icon" data-month="8">8</div>
-  <div class="icon" data-month="9">9</div>
-  <div class="icon" data-month="10">10</div>
-  <div class="icon" data-month="11">11</div>
-  <div class="icon" data-month="12">12</div>
+<!-- ページ2：日の選択 -->
+<div id="dayPage" class="page">
+  <h2>誕生日の日を選んでください</h2>
+  <div id="dayButtons"></div>
 </div>
 
-<!-- 観客ページ2：10の位 -->
-<div id="page2" class="page" style="left:100vw;">
-  <div class="icon" data-tens="0">0</div>
-  <div class="icon" data-tens="1">1</div>
-  <div class="icon" data-tens="2">2</div>
-  <div class="icon" data-tens="3">3</div>
-</div>
+<!-- ページ3：月選択＋カレンダー -->
+<div id="finalPage" class="page">
+  <h2 id="currentYear"></h2>
 
-<!-- 観客ページ3：1の位 -->
-<div id="page3" class="page" style="left:200vw;">
-  <div class="icon" data-ones="0">0</div>
-  <div class="icon" data-ones="1">1</div>
-  <div class="icon" data-ones="2">2</div>
-  <div class="icon" data-ones="3">3</div>
-  <div class="icon" data-ones="4">4</div>
-  <div class="icon" data-ones="5">5</div>
-  <div class="icon" data-ones="6">6</div>
-  <div class="icon" data-ones="7">7</div>
-  <div class="icon" data-ones="8">8</div>
-  <div class="icon" data-ones="9">9</div>
-</div>
+  <div class="month-buttons">
+    <button data-month="1">1月</button>
+    <button data-month="2">2月</button>
+    <button data-month="3">3月</button>
+    <button data-month="4">4月</button>
+    <button data-month="5">5月</button>
+    <button data-month="6">6月</button>
+    <button data-month="7">7月</button>
+    <button data-month="8">8月</button>
+    <button data-month="9">9月</button>
+    <button data-month="10">10月</button>
+    <button data-month="11">11月</button>
+    <button data-month="12">12月</button>
+  </div>
 
-<!-- 観客ページ4：カレンダーへ -->
-<div id="page4" class="page" style="left:300vw;">
-  <button id="openCalBtn" style="font-size:40px; padding:20px 40px;">カレンダーを開く</button>
-</div>
-
-<!-- カレンダー -->
-<div id="calendarPage" style="display:none;">
-  <h2 id="calTitle" style="font-size:40px; text-align:center;"></h2>
-  <div id="calendar" class="calendar"></div>
+  <div id="calendarArea"></div>
 </div>
 
 <script>
-let forcedCard = "";
-let birthday = { month: null, tens: null, ones: null };
-let currentPage = 1;
+  let selectedDay = null;
 
-/* 設定完了 → 設定画面を消す */
-document.getElementById("startBtn").addEventListener("click", () => {
-  const mark = document.getElementById("mark").value;
-  const number = document.getElementById("number").value;
-  forcedCard = mark + number;
-
-  const setup = document.getElementById("setup");
-  setup.style.display = "none";
-  setup.style.visibility = "hidden";
-  setup.style.pointerEvents = "none";
-});
-
-/* スワイプ判定 */
-let startX = 0;
-let tapStartTime = 0;
-
-document.body.addEventListener("touchstart", (e) => {
-  startX = e.changedTouches[0].clientX;
-  tapStartTime = Date.now();
-});
-
-document.body.addEventListener("touchend", (e) => {
-  const endX = e.changedTouches[0].clientX;
-  const diff = endX - startX;
-
-  const tapDuration = Date.now() - tapStartTime;
-  if (tapDuration < 200) {
-    handleTap(e);
-    return;
+  /* ページ遷移 */
+  function showPage(id) {
+    document.querySelectorAll(".page").forEach(p => p.style.display = "none");
+    document.getElementById(id).style.display = "block";
   }
 
-  if (diff < -50 && currentPage < 4) {
-    currentPage++;
-    movePages();
-  }
-});
-
-/* PC用 */
-document.body.addEventListener("mousedown", (e) => {
-  startX = e.clientX;
-});
-
-document.body.addEventListener("mouseup", (e) => {
-  const endX = e.clientX;
-  const diff = endX - startX;
-
-  if (diff < -50 && currentPage < 4) {
-    currentPage++;
-    movePages();
-  }
-});
-
-/* ページ移動 */
-function movePages() {
-  document.getElementById("page1").style.left = `${(1-currentPage)*100}vw`;
-  document.getElementById("page2").style.left = `${(2-currentPage)*100}vw`;
-  document.getElementById("page3").style.left = `${(3-currentPage)*100}vw`;
-  document.getElementById("page4").style.left = `${(4-currentPage)*100}vw`;
-}
-
-/* タップ判定 */
-function handleTap(e) {
-  const touch = e.changedTouches ? e.changedTouches[0] : null;
-  const elem = document.elementFromPoint(touch.clientX, touch.clientY);
-  if (!elem) return;
-
-  if (elem.dataset.month) {
-    birthday.month = Number(elem.dataset.month);
-    currentPage = 2;
-    movePages();
-    return;
+  function goToDayPage() {
+    showPage("dayPage");
   }
 
-  if (elem.dataset.tens) {
-    birthday.tens = Number(elem.dataset.tens);
-    currentPage = 3;
-    movePages();
-    return;
+  function goToFinalPage() {
+    showPage("finalPage");
   }
 
-  if (elem.dataset.ones) {
-    birthday.ones = Number(elem.dataset.ones);
-    currentPage = 4;
-    movePages();
-    return;
+  /* 日ボタン生成 */
+  const dayButtons = document.getElementById("dayButtons");
+  for (let i = 1; i <= 31; i++) {
+    const btn = document.createElement("button");
+    btn.textContent = i + "日";
+    btn.onclick = () => {
+      selectedDay = i;
+      goToFinalPage();
+    };
+    dayButtons.appendChild(btn);
   }
 
-  if (elem.id === "openCalBtn") {
-    openCalendar();
-  }
-}
+  /* 現在の年を表示 */
+  document.getElementById("currentYear").textContent =
+    new Date().getFullYear() + "年";
 
-/* カレンダー生成 */
-function openCalendar() {
-  const day = birthday.tens * 10 + birthday.ones;
+  /* 月選択ボタン → カレンダー生成 */
+  document.querySelectorAll(".month-buttons button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const month = parseInt(btn.dataset.month);
+      generateCalendar(month);
+    });
+  });
 
-  document.getElementById("page1").style.display = "none";
-  document.getElementById("page2").style.display = "none";
-  document.getElementById("page3").style.display = "none";
-  document.getElementById("page4").style.display = "none";
+  /* カレンダー生成（簡易版） */
+  function generateCalendar(month) {
+    const year = new Date().getFullYear();
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const lastDate = new Date(year, month, 0).getDate();
 
-  document.getElementById("calendarPage").style.display = "block";
+    let html = `<h3>${year}年 ${month}月</h3><table style="margin:auto;font-size:20px;">`;
+    html += "<tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr><tr>";
 
-  /* null月対策 */
-  document.getElementById("calTitle").innerText =
-    `${birthday.month ?? "??"}月のカレンダー`;
+    for (let i = 0; i < firstDay; i++) html += "<td></td>";
 
-  const cal = document.getElementById("calendar");
-  cal.innerHTML = "";
-
-  const marks = ["♠", "♥", "♦", "♣"];
-  const nums = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
-
-  for (let d = 1; d <= 31; d++) {
-    const div = document.createElement("div");
-    div.className = "day";
-
-    if (d === day) {
-      div.classList.add("forced");
-      div.innerText = `${d}\n${forcedCard}`;
-    } else {
-      const randMark = marks[Math.floor(Math.random() * marks.length)];
-      const randNum = nums[Math.floor(Math.random() * nums.length)];
-      div.innerText = `${d}\n${randMark}${randNum}`;
+    for (let d = 1; d <= lastDate; d++) {
+      let style = "";
+      if (d === selectedDay) {
+        style = "background:#ffeb3b;color:#000;font-weight:bold;border-radius:8px;";
+      }
+      html += `<td style="${style}">${d}</td>`;
+      if ((d + firstDay) % 7 === 0) html += "</tr><tr>";
     }
 
-    cal.appendChild(div);
+    html += "</tr></table>";
+    document.getElementById("calendarArea").innerHTML = html;
   }
-}
 </script>
 
 </body>
