@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Force Calendar</title>
-<link rel="manifest" href="manifest.json">
 
 <style>
   body {
@@ -20,15 +19,21 @@
     padding: 20px;
   }
 
-  /* 水色＋星背景（共通化） */
-  .star-bg {
-    background: #aee6ff;
-    background-image: radial-gradient(#ffffff 2px, transparent 2px),
-                      radial-gradient(#ffffff 2px, transparent 2px);
-    background-size: 40px 40px;
-    background-position: 0 0, 20px 20px;
-    min-height: 100vh;
-    color: #333;
+  /* iOS純正ピッカー風 */
+  .picker {
+    width: 120px;
+    height: 150px;
+    overflow-y: scroll;
+    margin: auto;
+    background: #fff;
+    color: #000;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    font-size: 24px;
+    text-align: center;
+  }
+  .picker div {
+    padding: 12px 0;
   }
 
   /* iOS風ボタン */
@@ -43,40 +48,72 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
   }
 
-  /* iOS純正ピッカー風（ドラム式） */
-  .picker {
-    width: 120px;
-    height: 150px;
-    overflow-y: scroll;
-    margin: auto;
+  /* iPhone純正の年ビュー */
+  .ios-year-view {
     background: #fff;
-    color: #333;
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-    font-size: 24px;
+    color: #000;
+    min-height: 100vh;
+    padding: 10px;
+  }
+
+  .mini-month {
+    width: 30%;
+    background: #fff;
+    color: #000;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    display: inline-block;
+    vertical-align: top;
+    cursor: pointer;
+  }
+
+  .mini-month table {
+    width: 100%;
+    font-size: 10px;
     text-align: center;
   }
 
-  .picker div {
-    padding: 12px 0;
+  .mini-month h3 {
+    margin: 0;
+    font-size: 16px;
   }
 
-  /* カード表示 */
+  /* 月のフルカレンダー（水色＋星背景） */
+  .star-bg {
+    background: #aee6ff;
+    background-image: radial-gradient(#ffffff 2px, transparent 2px),
+                      radial-gradient(#ffffff 2px, transparent 2px);
+    background-size: 40px 40px;
+    background-position: 0 0, 20px 20px;
+    min-height: 100vh;
+    color: #333;
+  }
+
+  /* カード表示（右下控えめ） */
   .card {
+    position: relative;
     font-size: 18px;
     padding: 6px;
     border-radius: 6px;
+  }
+
+  .card-value {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 14px;
+    color: #000;
   }
 </style>
 </head>
 
 <body>
-
-<!-- 1：フォースカード選択（iOS純正ピッカー風） -->
+<!-- 1：フォースカード選択 -->
 <div id="forcePage" class="page" style="display:block;">
   <h1>フォースカード選択</h1>
 
-  <!-- 選択中カードの確認領域（白背景） -->
   <div id="selectedCardDisplay"
        style="background:#fff;color:#000;font-size:40px;
               width:200px;margin:20px auto;padding:20px;
@@ -95,35 +132,15 @@
   <h3>数字</h3>
   <div class="picker" id="numberPicker"></div>
 
-  <button onclick="goToDayPage()">演技へ進む</button>
+  <button onclick="goToYearView()">演技へ進む</button>
 </div>
 
-<!-- 2：誕生日（日）選択 -->
-<div id="dayPage" class="page">
-  <h2>誕生日の日を選んでください</h2>
-  <div id="dayButtons"></div>
-</div>
-
-<!-- 3：月選択（水色＋星背景） -->
-<div id="monthPage" class="page star-bg">
+<!-- 2：年ビュー（iPhone純正風） -->
+<div id="yearPage" class="page ios-year-view">
   <h2 id="currentYear"></h2>
-  <div class="month-buttons">
-    <button data-month="1">1月</button>
-    <button data-month="2">2月</button>
-    <button data-month="3">3月</button>
-    <button data-month="4">4月</button>
-    <button data-month="5">5月</button>
-    <button data-month="6">6月</button>
-    <button data-month="7">7月</button>
-    <button data-month="8">8月</button>
-    <button data-month="9">9月</button>
-    <button data-month="10">10月</button>
-    <button data-month="11">11月</button>
-    <button data-month="12">12月</button>
-  </div>
+  <div id="miniCalendarContainer"></div>
 </div>
-
-<!-- 4：カレンダー表示（水色＋星背景） -->
+<!-- 3：月ビュー（水色＋星背景） -->
 <div id="calendarPage" class="page star-bg">
   <h2 id="calendarTitle"></h2>
   <div id="calendarArea"></div>
@@ -132,15 +149,15 @@
 <script>
   let forceSuit = "♣";
   let forceNumber = "A";
-  let selectedDay = null;
   let selectedMonth = null;
+
+  let tapCount = 0;
 
   function showPage(id) {
     document.querySelectorAll(".page").forEach(p => p.style.display = "none");
     document.getElementById(id).style.display = "block";
   }
 
-  /* 選択中カードを中央に表示 */
   function updateSelectedCard() {
     document.getElementById("selectedCardDisplay").textContent =
       forceSuit + forceNumber;
@@ -172,34 +189,41 @@
     }
   });
 
-  /* 演技へ進む */
-  function goToDayPage() {
-    showPage("dayPage");
+  /* 年ビューへ */
+  function goToYearView() {
+    generateYearView();
+    showPage("yearPage");
   }
 
-  /* 日選択 */
-  const dayButtons = document.getElementById("dayButtons");
-  for (let i = 1; i <= 31; i++) {
-    const btn = document.createElement("button");
-    btn.textContent = i + "日";
-    btn.onclick = () => {
-      selectedDay = i;
-      showPage("monthPage");
-    };
-    dayButtons.appendChild(btn);
+  /* 年ビュー生成 */
+  function generateYearView() {
+    const year = new Date().getFullYear();
+    document.getElementById("currentYear").textContent = year + "年";
+
+    const container = document.getElementById("miniCalendarContainer");
+    container.innerHTML = "";
+
+    for (let m = 1; m <= 12; m++) {
+      const div = document.createElement("div");
+      div.className = "mini-month";
+      div.onclick = () => openMonth(m);
+
+      div.innerHTML = `<h3>${m}月</h3>
+        <table>
+          <tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr>
+        </table>`;
+
+      container.appendChild(div);
+    }
   }
 
-  /* 月選択 */
-  document.getElementById("currentYear").textContent =
-    new Date().getFullYear() + "年";
-
-  document.querySelectorAll(".month-buttons button").forEach(btn => {
-    btn.onclick = () => {
-      selectedMonth = parseInt(btn.dataset.month);
-      generateCalendar();
-      showPage("calendarPage");
-    };
-  });
+  /* 月ビューへ移動 */
+  function openMonth(month) {
+    selectedMonth = month;
+    tapCount = 0;
+    generateCalendar();
+    showPage("calendarPage");
+  }
 
   /* ランダムカード */
   function randomCard() {
@@ -208,7 +232,7 @@
     return suits[Math.floor(Math.random()*4)] + nums[Math.floor(Math.random()*13)];
   }
 
-  /* カレンダー生成 */
+  /* 月のフルカレンダー生成 */
   function generateCalendar() {
     const year = new Date().getFullYear();
     const month = selectedMonth;
@@ -225,19 +249,31 @@
     for (let i = 0; i < firstDay; i++) html += "<td></td>";
 
     for (let d = 1; d <= lastDate; d++) {
-      let card = randomCard();
-
-      if (d === selectedDay) {
-        card = forceSuit + forceNumber;  // ★フォースカード（強調なし）
-      }
-
-      html += `<td class="card">${d}<br>${card}</td>`;
-
+      html += `<td class="card" onclick="tapDay(this, ${d})">${d}</td>`;
       if ((d + firstDay) % 7 === 0) html += "</tr><tr>";
     }
 
     html += "</tr></table>";
     document.getElementById("calendarArea").innerHTML = html;
+
+    /* 初期位置1日にフォースカード */
+    const firstCell = document.querySelector(".card");
+    const card = forceSuit + forceNumber;
+    firstCell.innerHTML += `<span class="card-value">${card}</span>`;
+  }
+
+  /* 日付タップ時のカード表示 */
+  function tapDay(cell, day) {
+    tapCount++;
+
+    let card;
+    if (tapCount <= 2) {
+      card = forceSuit + forceNumber;
+    } else {
+      card = randomCard();
+    }
+
+    cell.innerHTML = `${day}<span class="card-value">${card}</span>`;
   }
 </script>
 
