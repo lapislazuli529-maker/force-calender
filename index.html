@@ -83,7 +83,84 @@
     color: rgba(0,0,0,0.5);
   }
 
-  /* 年ビューなどは省略（前回と同じ） */
+  /* ⭐ 年ビュー */
+  .year-view {
+    background: #fff;
+    padding: 10px 20px;
+  }
+
+  .month-block {
+    cursor: pointer;
+    user-select: none;
+    padding: 10px 0;
+    display: block;
+    margin-bottom: 26px;
+  }
+
+  .month-title {
+    font-size: 20px;
+    font-weight: 500;
+    text-align: left;
+    margin-bottom: 6px;
+  }
+
+  .mini-month-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+
+  .mini-month-table th {
+    font-size: 12px;
+    font-weight: 400;
+    color: #666;
+    padding-bottom: 4px;
+  }
+
+  .mini-month-table td {
+    font-size: 14px;
+    height: 22px;
+    text-align: center;
+    color: #000;
+  }
+
+  .today {
+    color: red;
+    font-weight: 600;
+  }
+
+  /* ⭐ 月ビュー */
+  .calendar-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin-top: 10px;
+  }
+
+  .calendar-table th {
+    font-size: 12px;
+    font-weight: 400;
+    color: #666;
+    padding-bottom: 6px;
+  }
+
+  .calendar-cell {
+    width: 44px;
+    height: 44px;
+    position: relative;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 16px;
+    font-weight: 400;
+    color: #000;
+    padding: 0;
+  }
+
+  .selected-day {
+    background: #e5e5e5;
+    color: #000 !important;
+    border-radius: 50%;
+  }
 </style>
 </head>
 
@@ -127,11 +204,37 @@
 </div>
 
 
+<!-- ⭐ 2：年ビュー -->
+<div id="yearPage" class="page year-view">
+  <h2 id="currentYear" style="text-align:left;font-size:26px;margin-bottom:20px;"></h2>
+  <div id="yearContainer"></div>
+</div>
+
+
+<!-- ⭐ 3：月ビュー -->
+<div id="calendarPage" class="page">
+
+  <div onclick="showPage('yearPage')" 
+       style="font-size:20px;color:#007aff;cursor:pointer;margin-bottom:10px;">
+    ＜ 年へ戻る
+  </div>
+
+  <h2 id="calendarTitle" style="font-weight:500;margin-bottom:10px;"></h2>
+  <div id="calendarArea"></div>
+
+  <div id="eventList" style="margin-top:20px;text-align:left;font-size:18px;"></div>
+</div>
+
+
 <script>
   let forceSuit = "";
   let forceNumber = "";
   let forceCard = "";
   let passcode = "";
+
+  let selectedMonth = null;
+  let tapCount = 0;
+  let savedCards = {};
 
   const suitMap = {
     "01": "♦",
@@ -170,6 +273,7 @@
     }
   }
 
+  /* ⭐ 削除ボタン */
   function deleteNum() {
     if (passcode.length > 0) {
       passcode = passcode.slice(0, -1);
@@ -183,8 +287,10 @@
     document.getElementById("passcodeDisplay").textContent = dots;
   }
 
+  /* ⭐ 解除ボタン */
   function unlock() {
     if (passcode.length !== 4) return;
+
     showPage("yearPage");
     generateYearView();
   }
@@ -194,7 +300,155 @@
     document.getElementById(id).style.display = "block";
   }
 
-  /* 年ビュー・月ビューは前回と同じなので省略 */
+  /* ⭐ 年ビュー生成 */
+  function generateYearView() {
+    const year = new Date().getFullYear();
+    document.getElementById("currentYear").textContent = year + "年";
+
+    const container = document.getElementById("yearContainer");
+    container.innerHTML = "";
+
+    const months = ["January","February","March","April","May","June",
+                    "July","August","September","October","November","December"];
+
+    for (let m = 1; m <= 12; m++) {
+      const block = document.createElement("div");
+      block.className = "month-block";
+      block.onclick = () => openMonth(m);
+
+      block.innerHTML = `
+        <div class="month-title">${m}月 ${months[m-1]}</div>
+        ${generateMiniMonth(year, m)}
+      `;
+
+      container.appendChild(block);
+    }
+  }
+
+  /* ⭐ ミニカレンダー生成 */
+  function generateMiniMonth(year, month) {
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const lastDate = new Date(year, month, 0).getDate();
+    const today = new Date();
+
+    let html = `<table class="mini-month-table">
+      <tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr><tr>`;
+
+    for (let i = 0; i < firstDay; i++) html += "<td></td>";
+
+    for (let d = 1; d <= lastDate; d++) {
+      const isToday =
+        today.getFullYear() === year &&
+        today.getMonth() + 1 === month &&
+        today.getDate() === d;
+
+      html += `<td class="${isToday ? "today" : ""}">${d}</td>`;
+
+      if ((d + firstDay) % 7 === 0) html += "</tr><tr>";
+    }
+
+    html += "</tr></table>";
+    return html;
+  }
+
+  /* ⭐ 月ビューを開く */
+  function openMonth(month) {
+    selectedMonth = month;
+    tapCount = 0;
+    savedCards = {};
+    generateCalendar();
+    showPage("calendarPage");
+  }
+
+  /* ⭐ ランダムカード生成（フォースカード除外） */
+  function randomCard() {
+    const suits = ["♣","♥","♠","♦"];
+    const nums = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+
+    let card = "";
+    do {
+      card = suits[Math.floor(Math.random()*4)] + nums[Math.floor(Math.random()*13)];
+    } while (card === forceCard);
+
+    return card;
+  }
+
+  /* ⭐ 月ビュー生成 */
+  function generateCalendar() {
+    const year = new Date().getFullYear();
+    const month = selectedMonth;
+
+    const months = ["January","February","March","April","May","June",
+                    "July","August","September","October","November","December"];
+
+    document.getElementById("calendarTitle").textContent =
+      `${year}年 ${month}月 ${months[month-1]}`;
+
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const lastDate = new Date(year, month, 0).getDate();
+
+    let html = `<table class="calendar-table">
+      <tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr><tr>`;
+
+    for (let i = 0; i < firstDay; i++) html += "<td></td>";
+
+    for (let d = 1; d <= lastDate; d++) {
+      html += `<td class="calendar-cell" onclick="tapDay(this, ${d})">${d}</td>`;
+      if ((d + firstDay) % 7 === 0) html += "</tr><tr>";
+    }
+
+    html += "</tr></table>";
+    document.getElementById("calendarArea").innerHTML = html;
+
+    document.getElementById("eventList").innerHTML = "";
+  }
+
+  /* ⭐ 日付タップ処理 */
+  function tapDay(cell, day) {
+    document.getElementById("eventList").innerHTML = "";
+
+    document.querySelectorAll(".calendar-cell").forEach(c => {
+      c.classList.remove("selected-day");
+    });
+
+    cell.classList.add("selected-day");
+
+    let card;
+
+    if (savedCards[day]) {
+      card = savedCards[day];
+    } else {
+      if (tapCount === 0) {
+        card = forceCard;
+      } else {
+        card = randomCard();
+      }
+      savedCards[day] = card;
+    }
+
+    tapCount++;
+
+    cell.innerHTML = `${day}`;
+
+    addEventToList(day, card);
+  }
+
+  /* ⭐ イベント表示 */
+  function addEventToList(day, card) {
+    const list = document.getElementById("eventList");
+
+    const suitIcon = card[0];
+    const number = card.slice(1);
+
+    const html = `
+      <div style="margin-bottom:10px;">
+        <span style="font-size:22px;">🕒 ${suitIcon}${number}</span><br>
+        <span style="color:#666;">終日</span>
+      </div>
+    `;
+
+    list.innerHTML = html;
+  }
 </script>
 
 </body>
