@@ -12,7 +12,6 @@
     overflow: hidden;
   }
 
-  /* iPhone風ホーム画面 */
   .page {
     width: 100vw;
     height: 100vh;
@@ -35,7 +34,6 @@
     margin: auto;
   }
 
-  /* カレンダー */
   .calendar {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -56,7 +54,6 @@
     font-weight: bold;
   }
 
-  /* 演者設定画面 */
   #setup {
     position: absolute;
     width: 100vw;
@@ -70,12 +67,10 @@
     padding: 10px;
     margin: 10px 0;
   }
-
 </style>
 </head>
 <body>
 
-<!-- 演者設定画面 -->
 <div id="setup">
   <h2>フォースカード設定</h2>
 
@@ -97,7 +92,6 @@
   <button id="startBtn">演技に進む</button>
 </div>
 
-<!-- ホーム画面ページ（1〜4ページ） -->
 <div id="page1" class="page" style="left:0vw;">
   <div class="icon" data-month="1"></div>
   <div class="icon" data-month="2"></div>
@@ -137,7 +131,6 @@
   <button id="openCalBtn">カレンダーを開く</button>
 </div>
 
-<!-- カレンダー画面 -->
 <div id="calendarPage" style="display:none;">
   <h2 id="calTitle"></h2>
   <div id="calendar" class="calendar"></div>
@@ -148,21 +141,15 @@ let forcedCard = "";
 let birthday = { month: null, tens: null, ones: null };
 let currentPage = 1;
 
-/* -------------------------
-   演者設定画面のボタン
-------------------------- */
 document.getElementById("startBtn").addEventListener("click", () => {
   const mark = document.getElementById("mark").value;
   const number = document.getElementById("number").value;
   forcedCard = mark + number;
-
   document.getElementById("setup").style.display = "none";
 });
 
-/* -------------------------
-   スワイプ（スマホ）
-------------------------- */
 let startX = 0;
+let tapStartTime = 0;
 
 document.body.addEventListener("touchstart", (e) => {
   startX = e.changedTouches[0].clientX;
@@ -185,9 +172,6 @@ document.body.addEventListener("touchend", (e) => {
   }
 });
 
-/* -------------------------
-   PC用マウス操作
-------------------------- */
 document.body.addEventListener("mousedown", (e) => {
   startX = e.clientX;
 });
@@ -202,9 +186,6 @@ document.body.addEventListener("mouseup", (e) => {
   }
 });
 
-/* -------------------------
-   ページ移動
-------------------------- */
 function movePages() {
   document.getElementById("page1").style.left = `${(1-currentPage)*100}vw`;
   document.getElementById("page2").style.left = `${(2-currentPage)*100}vw`;
@@ -212,40 +193,38 @@ function movePages() {
   document.getElementById("page4").style.left = `${(4-currentPage)*100}vw`;
 }
 
-/* -------------------------
-   タップ判定
-------------------------- */
-let tapStartTime = 0;
-
 function handleTap(e) {
-  const target = e.target;
+  const touch = e.changedTouches ? e.changedTouches[0] : null;
+  const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (!elem) return;
 
-  if (target.dataset.month) {
-    birthday.month = Number(target.dataset.month);
+  if (elem.dataset.month) {
+    birthday.month = Number(elem.dataset.month);
     currentPage = 2;
     movePages();
     return;
   }
 
-  if (target.dataset.tens) {
-    birthday.tens = Number(target.dataset.tens);
+  if (elem.dataset.tens) {
+    birthday.tens = Number(elem.dataset.tens);
     currentPage = 3;
     movePages();
     return;
   }
 
-  if (target.dataset.ones) {
-    birthday.ones = Number(target.dataset.ones);
+  if (elem.dataset.ones) {
+    birthday.ones = Number(elem.dataset.ones);
     currentPage = 4;
     movePages();
     return;
   }
+
+  if (elem.id === "openCalBtn") {
+    openCalendar();
+  }
 }
 
-/* -------------------------
-   カレンダーを開く
-------------------------- */
-document.getElementById("openCalBtn").addEventListener("click", () => {
+function openCalendar() {
   const day = birthday.tens * 10 + birthday.ones;
 
   document.getElementById("page1").style.display = "none";
@@ -271,7 +250,7 @@ document.getElementById("openCalBtn").addEventListener("click", () => {
 
     cal.appendChild(div);
   }
-});
+}
 </script>
 
 </body>
