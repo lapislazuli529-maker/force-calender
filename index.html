@@ -12,6 +12,16 @@
     overflow: hidden;
   }
 
+  /* 設定画面を最前面に固定 */
+  #setup {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    background: #111;
+    padding: 20px;
+    z-index: 9999; /* ← これが決定打 */
+  }
+
   .page {
     width: 100vw;
     height: 100vh;
@@ -53,24 +63,11 @@
     color: #000;
     font-weight: bold;
   }
-
-  #setup {
-    position: absolute;
-    width: 100vw;
-    height: 100vh;
-    background: #111;
-    padding: 20px;
-  }
-
-  select, button {
-    font-size: 20px;
-    padding: 10px;
-    margin: 10px 0;
-  }
 </style>
 </head>
 <body>
 
+<!-- 設定画面（最初だけ表示） -->
 <div id="setup">
   <h2>フォースカード設定</h2>
 
@@ -92,6 +89,7 @@
   <button id="startBtn">演技に進む</button>
 </div>
 
+<!-- 観客ページ1：月 -->
 <div id="page1" class="page" style="left:0vw;">
   <div class="icon" data-month="1"></div>
   <div class="icon" data-month="2"></div>
@@ -107,6 +105,7 @@
   <div class="icon" data-month="12"></div>
 </div>
 
+<!-- 観客ページ2：10の位 -->
 <div id="page2" class="page" style="left:100vw;">
   <div class="icon" data-tens="0"></div>
   <div class="icon" data-tens="1"></div>
@@ -114,6 +113,7 @@
   <div class="icon" data-tens="3"></div>
 </div>
 
+<!-- 観客ページ3：1の位 -->
 <div id="page3" class="page" style="left:200vw;">
   <div class="icon" data-ones="0"></div>
   <div class="icon" data-ones="1"></div>
@@ -127,10 +127,12 @@
   <div class="icon" data-ones="9"></div>
 </div>
 
+<!-- 観客ページ4：カレンダーへ -->
 <div id="page4" class="page" style="left:300vw;">
   <button id="openCalBtn">カレンダーを開く</button>
 </div>
 
+<!-- カレンダー表示 -->
 <div id="calendarPage" style="display:none;">
   <h2 id="calTitle"></h2>
   <div id="calendar" class="calendar"></div>
@@ -141,11 +143,16 @@ let forcedCard = "";
 let birthday = { month: null, tens: null, ones: null };
 let currentPage = 1;
 
+/* 設定完了 → 設定画面を完全に消す */
 document.getElementById("startBtn").addEventListener("click", () => {
   const mark = document.getElementById("mark").value;
   const number = document.getElementById("number").value;
   forcedCard = mark + number;
-  document.getElementById("setup").style.display = "none";
+
+  const setup = document.getElementById("setup");
+  setup.style.display = "none";
+  setup.style.visibility = "hidden";
+  setup.style.pointerEvents = "none";
 });
 
 let startX = 0;
@@ -172,6 +179,7 @@ document.body.addEventListener("touchend", (e) => {
   }
 });
 
+/* PC用 */
 document.body.addEventListener("mousedown", (e) => {
   startX = e.clientX;
 });
@@ -186,6 +194,7 @@ document.body.addEventListener("mouseup", (e) => {
   }
 });
 
+/* ページ移動 */
 function movePages() {
   document.getElementById("page1").style.left = `${(1-currentPage)*100}vw`;
   document.getElementById("page2").style.left = `${(2-currentPage)*100}vw`;
@@ -193,6 +202,7 @@ function movePages() {
   document.getElementById("page4").style.left = `${(4-currentPage)*100}vw`;
 }
 
+/* タップ判定（GitHub Pagesでも確実に動く） */
 function handleTap(e) {
   const touch = e.changedTouches ? e.changedTouches[0] : null;
   const elem = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -224,6 +234,7 @@ function handleTap(e) {
   }
 }
 
+/* カレンダー表示 */
 function openCalendar() {
   const day = birthday.tens * 10 + birthday.ones;
 
